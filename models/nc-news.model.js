@@ -39,6 +39,22 @@ function fetchCommentsByArticleId(article_id) {
     })
 }
 
+function fetchPostedCommentByArticleId(article_id, author, body) {
+    if(author === undefined || body === undefined) {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    if(typeof author !== 'string' || typeof body !== 'string') {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+
+    return db.query(`INSERT INTO comments (author, body, article_id) VALUES ($1, $2, $3) RETURNING *`, [author, body, article_id]).then(({rows}) => {
+        if(rows.length === 0) {
+            return Promise.reject({status: 404, msg: 'not found'})
+        }
+        return rows[0]
+    })
+}
 
 
-module.exports = {fetchTopics, checkArticleIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId}
+
+module.exports = {fetchTopics, checkArticleIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, fetchPostedCommentByArticleId}

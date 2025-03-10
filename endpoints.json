@@ -59,5 +59,21 @@
         }
       ]
     }
+  },
+  "POST /api/articles/:article_id/comments": {
+    "description": "posts and serves posted comment to the requested article id",
+    "queries": [],
+    "exampleResponse": {
+      "comment": [
+        {
+          "comment_id": 19,
+          "votes": 0,
+          "created_at": "2025-03-10T15:18:00.000Z",
+          "author": "butter_bridge",
+          "body": "example comment...",
+          "article_id": 3
+        }
+      ]
+    }
   }
 }
