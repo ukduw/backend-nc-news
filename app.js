@@ -1,14 +1,14 @@
 const express = require("express")
 const app = express()
 const db = require("./db/connection")
-const { getEndpoints } = require("./controllers/nc-news.controller")
+const { getEndpoints, getTopics } = require("./controllers/nc-news.controller")
 const { handlePsqlErrors, handleCustomErrors, handleServerErrors } = require("./controllers/errors.controller")
 
 app.use(express.json())
 
 
 app.get("/api", getEndpoints)
-// app.get("/api/topics", getTopics)
+app.get("/api/topics", getTopics)
 // app.get("/api/articles/:article_id", getArticleById) (+COMMENT COUNT)
 // app.get("/api/articles", getArticles) (+SORT QUERY)
 // app.get("/api/articles/:article_id/comments", getCommentsByArticleId)
