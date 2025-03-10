@@ -97,3 +97,38 @@ describe("GET /api/articles", () => {
       })
   })
 })
+
+describe("GET /api/articles/:article_id/comments", () => {
+  test("200: responds with array of comment objects of requested id", () => {
+    return request(app)
+      .get("/api/articles/3/comments")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.comments).toHaveLength(2)
+        body.comments.forEach((comment) => {
+          expect(typeof comment.comment_id).toBe("number")
+          expect(typeof comment.votes).toBe("number")
+          expect(typeof comment.created_at).toBe("string")
+          expect(typeof comment.author).toBe("string")
+          expect(typeof comment.body).toBe("string")
+          expect(typeof comment.article_id).toBe("number")
+        })
+      })
+  })
+  test("400: responds bad request if requested id is NaN", () => {
+    return request(app)
+      .get("/api/articles/notanumber/comments")
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("404: responds not found if id is a number, but no such id exists in the table", () => {
+    return request(app)
+      .get("/api/articles/9999/comments")
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
+      })
+  })
+})
