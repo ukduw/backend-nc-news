@@ -1,4 +1,4 @@
-const { fetchTopics, checkArticleIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, fetchPostedCommentByArticleId } = require("../models/nc-news.model")
+const { fetchTopics, checkArticleIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, fetchPostedCommentByArticleId, fetchPatchedArticleById } = require("../models/nc-news.model")
 const endpoints = require("../endpoints.json")
 
 function getEndpoints(request, response) {
@@ -56,6 +56,17 @@ function PostCommentByArticleId(request, response, next) {
     })
 }
 
+function patchArticleById(request, response, next) {
+    const {article_id} = request.params
+    const {inc_votes} = request.body
+
+    fetchPatchedArticleById(article_id, inc_votes).then((article) => {
+        response.status(201).send({article: article})
+    })
+    .catch((error) => {
+        next(error)
+    })
+}
 
 
-module.exports = {getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, PostCommentByArticleId}
+module.exports = {getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, PostCommentByArticleId, patchArticleById}
