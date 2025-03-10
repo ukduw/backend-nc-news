@@ -37,3 +37,37 @@ describe("GET /api/topics", () => {
       })
   })
 })
+
+describe("GET /api/articles/:article_id", () => {
+  test("200: responds with article object of requested id", () => {
+    return request(app)
+      .get("/api/articles/3")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.article.author).toBe("icellusedkars")
+        expect(body.article.title).toBe("Eight pug gifs that remind me of mitch")
+        expect(body.article.article_id).toBe(3)
+        expect(body.article.body).toBe("some gifs")
+        expect(body.article.topic).toBe("mitch")
+        expect(body.article.created_at).toBe("2020-11-03T09:12:00.000Z")
+        expect(body.article.votes).toBe(0)
+        expect(body.article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+      })
+  })
+  test("400: responds bad request if requested id is NaN", () => {
+    return request(app)
+      .get("/api/articles/notanumber")
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("404: responds not found if id is a number, but no such id exists in the table", () => {
+    return request(app)
+      .get("/api/articles/9999")
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
+      })
+  })
+})
