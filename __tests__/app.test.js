@@ -132,3 +132,54 @@ describe("GET /api/articles/:article_id/comments", () => {
       })
   })
 })
+
+describe("POST /api/articles/:article_id/comments", () => {
+  test("201: responds with posted comment to requested article id", () => {
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send({author: "butter_bridge", body: "test body test body"})
+      .expect(201)
+      .then(({body}) => {
+        expect(body.comment.comment_id).toBe(19)
+        expect(body.comment.article_id).toBe(3)
+        expect(body.comment.body).toBe("test body test body")
+        expect(body.comment.votes).toBe(0)
+        expect(body.comment.author).toBe("butter_bridge")
+        expect(typeof body.comment.created_at).toBe("string")
+      })
+  })
+  test("400: responds bad request if requested id is NaN", () => {
+    return request(app)
+      .get("/api/articles/notanumber/comments")
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+  test("404: responds not found if id is a number, but no such id exists", () => {
+    return request(app)
+      .get("/api/articles/999/comments")
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
+    })
+  })
+  test("400: responds bad request if request is missing parameter(s)", () => {
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send({username: "butter_bridge"})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: responds bad request if request contains incorrect parameter type", () => {
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send({username: 123, body: 123})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+})
