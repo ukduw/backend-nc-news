@@ -40,7 +40,7 @@ describe("convertTimestampToDate", () => {
 });
 
 
-describe.only("formatArticleID", () => {
+describe("formatArticleID", () => {
   test("returns new array", () => {
     const testComments = [{
       article_title: "They're not exactly dogs, are they?",

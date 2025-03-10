@@ -87,7 +87,6 @@ function insertComments(commentData, articleData) {
   const jsTimestamp = commentData.map((obj) => {
     return convertTimestampToDate(obj)
   })
-  console.log(jsTimestamp)
   const withArticleID = formatArticleID(jsTimestamp, articleData)
 
   const sqlString = format(`INSERT INTO comments (article_id, body, votes, author, created_at) VALUES %L`, withArticleID)
