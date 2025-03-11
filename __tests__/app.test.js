@@ -79,7 +79,7 @@ describe("GET /api/articles", () => {
       .get("/api/articles")
       .expect(200)
       .then(({body}) => {
-        expect(body.articles).toHaveLength(5)
+        expect(body.articles).toHaveLength(13)
         body.articles.forEach((article) => {
           expect(typeof article.author).toBe("string")
           expect(typeof article.title).toBe("string")
@@ -94,6 +94,29 @@ describe("GET /api/articles", () => {
           return b.created_at - a.created_at
         })
         expect(body.articles).toEqual(sortedByDESC)
+      })
+  })
+  test("200: (sort_by) responds with article objects sorted by requested column, on query", () => {
+    return request(app)
+      .get("/api/articles?sort_by=article_id")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.articles).toHaveLength(13)
+        console.log(body)
+        expect(body.articles[0].article_id).toBe(13)
+        expect(body.articles[12].article_id).toBe(1)
+      })
+  })
+  test("200: (order) responds with sorted article objects, ASC or DESC, on query", () => {
+    return request(app)
+      .get("/api/articles?order=asc")
+      .expect(200)
+      .then(({body}) => {
+        // default sort by: created_at
+        const sortedByASC = body.articles.toSorted((a, b) => {
+          return a.created_at - b.created_at
+        })
+      expect(body.articles).toEqual(sortedByASC)
       })
   })
 })
