@@ -40,7 +40,7 @@ describe("GET /api/topics", () => {
 })
 
 describe("GET /api/articles/:article_id", () => {
-  test("200: responds with article object of requested id", () => {
+  test("200: responds with article object of requested id, with comment count", () => {
     return request(app)
       .get("/api/articles/3")
       .expect(200)
@@ -53,6 +53,7 @@ describe("GET /api/articles/:article_id", () => {
         expect(body.article.created_at).toBe("2020-11-03T09:12:00.000Z")
         expect(body.article.votes).toBe(0)
         expect(body.article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+        expect(body.article.comment_count).toBe("2")
       })
   })
   test("400: responds bad request if requested id is NaN", () => {
