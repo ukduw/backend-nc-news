@@ -18,7 +18,7 @@ function handleCustomErrors(error, request, response, next) {
 }
 
 function handleServerErrors(error, request, response, next) {
-    console.log(error, "Handle server errors")
+    //console.log(error, "Handle server errors")
     response.status(500).send({msg: 'internal server error'})
 }
 
