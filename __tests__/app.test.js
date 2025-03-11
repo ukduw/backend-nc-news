@@ -102,7 +102,6 @@ describe("GET /api/articles", () => {
       .expect(200)
       .then(({body}) => {
         expect(body.articles).toHaveLength(13)
-        console.log(body)
         expect(body.articles[0].article_id).toBe(13)
         expect(body.articles[12].article_id).toBe(1)
       })
@@ -117,6 +116,41 @@ describe("GET /api/articles", () => {
           return a.created_at - b.created_at
         })
       expect(body.articles).toEqual(sortedByASC)
+      })
+  })
+  test("200: (topic) responds with article objects, filtered by topic, on query", () => {
+    return request(app)
+      .get("/api/articles?topic=mitch")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.articles).toHaveLength(12)
+        body.articles.forEach((article) => {
+          expect(article.topic).toBe("mitch")
+        })
+      })
+  })
+  test("400: (sort_by) responds bad request when queried with non-greenlisted column name", () => {
+    return request(app)
+      .get("/api/articles?sort_by=notacolumn")
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: (order) responds bad request when queried with non-greenlisted order", () => {
+    return request(app)
+      .get("/api/articles?order=fromhightolow")
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: (topic) responds bad request when queried with non-greenlisted topic name", () => {
+    return request(app)
+      .get("/api/articles?topic=slug")
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
       })
   })
 })
