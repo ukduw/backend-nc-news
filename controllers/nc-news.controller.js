@@ -1,4 +1,4 @@
-const { fetchTopics, checkArticleIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById } = require("../models/nc-news.model")
+const { fetchTopics, checkArticleIdExists, checkCommentIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers } = require("../models/nc-news.model")
 const endpoints = require("../endpoints.json")
 
 function getEndpoints(request, response) {
@@ -31,24 +31,29 @@ function getArticles(request, response) {
 function getCommentsByArticleId(request, response, next) {
     const {article_id} = request.params
 
-    if(checkArticleIdExists(article_id)) {
-        fetchCommentsByArticleId(article_id).then((comments) => {
-            response.status(200).send({comments: comments})
-        })
-    } else {
-        return Promise.reject({status: 404, msg: 'not found'})
+    const promises = [fetchCommentsByArticleId(article_id)]
+    if(article_id) {
+        promises.push(checkArticleIdExists(article_id))
     }
 
-    // .catch((error) => {
-    //     next(error)
-    // })
+    Promise.all(promises).then(([comments]) => {
+        response.status(200).send({comments: comments})
+    })
+    .catch((error) => {
+        next(error)
+    })
 }
 
 function postCommentByArticleId(request, response, next) {
     const {article_id} = request.params
     const {author, body} = request.body
 
-    insertCommentByArticleId(article_id, author, body).then((comment) => {
+    const promises = [insertCommentByArticleId(article_id, author, body)]
+    if(article_id) {
+        promises.push(checkArticleIdExists(article_id))
+    }
+
+    Promise.all(promises).then(([comment]) => {
         response.status(201).send({comment: comment})
     })
     .catch((error) => {
@@ -71,15 +76,24 @@ function patchArticleById(request, response, next) {
 function deletesCommentById(request, response, next) {
     const {comment_id} = request.params
 
-    deleteCommentById(comment_id).then((comment) => {
-        response.status(204).send({comment: comment})
+    checkCommentIdExists(comment_id)
+    .then(()=>{ deleteCommentById(comment_id).then(({comment}) => {
+            response.status(204).send({comment: comment})
+        }) 
     })
     .catch((error) => {
-        console.log(error)
+        next(error)
+    })
+}
+
+function getUsers(request, response, next) {
+    fetchUsers().then((users) => {
+        response.status(200).send({users: users})
+    })
+    .catch((error) => {
         next(error)
     })
 }
 
 
-
-module.exports = {getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById}
+module.exports = { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers }

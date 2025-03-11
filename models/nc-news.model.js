@@ -16,15 +16,24 @@ function checkArticleIdExists(article_id) {
                 match = true
             }
         })
-        return match
+        if(match === false) {
+            return Promise.reject({status: 404, msg: 'not found'})
+        }
     })
+}
 
-    // return db.query(`SELECT * FROM articles WHERE article_id = $1`, [article_id])
-    // .then(({rows}) => {
-    //     if(rows.length === 0) {
-    //         return Promise.reject({status: 404, msg: 'not found'})
-    //     }
-    // })
+function checkCommentIdExists(comment_id) {
+    let match = false
+    return db.query(`SELECT comment_id FROM comments`).then(({rows}) => {
+        rows.forEach((obj) => {
+            if(obj.comment_id === Number(comment_id)) {
+                match = true
+            }
+        })
+        if(match === false) {
+            return Promise.reject({status: 404, msg: 'not found'})
+        }
+    })
 }
 
 function fetchArticleById(article_id) {
@@ -88,5 +97,11 @@ function deleteCommentById(comment_id) {
     })
 }
 
+function fetchUsers() {
+    return db.query(`SELECT * FROM users`).then(({rows}) => {
+        return rows
+    })
+}
 
-module.exports = {fetchTopics, checkArticleIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById}
+
+module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers}

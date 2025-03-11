@@ -1,6 +1,9 @@
 function handlePsqlErrors(error, request, response, next) {
     if(error.code === '22P02') {
         response.status(400).send({msg: 'bad request'})
+    } 
+    if(error.code === '23503') {
+        response.status(404).send({msg: 'not found'})
     } else {
         next(error)
     }
