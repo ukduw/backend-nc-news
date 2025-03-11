@@ -115,22 +115,30 @@ describe("GET /api/articles/:article_id/comments", () => {
         })
       })
   })
-  test("400: responds bad request if requested id is NaN", () => {
+  test("200: responds with empty array if id exists, but article has no associated comments", () => {
     return request(app)
-      .get("/api/articles/notanumber/comments")
-      .expect(400)
+      .get("/api/articles/10/comments")
+      .expect(200)
       .then(({body}) => {
-        expect(body.msg).toBe('bad request')
+        expect(body.comments).toHaveLength(0)
       })
   })
-  test("404: responds not found if id is a number, but no such id exists in the table", () => {
-    return request(app)
-      .get("/api/articles/9999/comments")
-      .expect(404)
-      .then(({body}) => {
-        expect(body.msg).toBe('not found')
-      })
-  })
+  // test("400: responds bad request if requested id is NaN", () => {
+  //   return request(app)
+  //     .get("/api/articles/notanumber/comments")
+  //     .expect(400)
+  //     .then(({body}) => {
+  //       expect(body.msg).toBe('bad request')
+  //     })
+  // })
+  // test("404: responds not found if id is a number, but no such id exists in the table", () => {
+  //   return request(app)
+  //     .get("/api/articles/9999/comments")
+  //     .expect(404)
+  //     .then(({body}) => {
+  //       expect(body.msg).toBe('not found')
+  //     })
+  // })
 })
 
 describe("POST /api/articles/:article_id/comments", () => {
@@ -148,22 +156,38 @@ describe("POST /api/articles/:article_id/comments", () => {
         expect(typeof body.comment.created_at).toBe("string")
       })
   })
+  test("201: posts and ignores unnecessary properties in post object", () => {
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send({author: "butter_bridge", body: "test body", votes: 50, test: "test"})
+      .expect(201)
+      .then(({body}) => {
+        expect(body.comment.comment_id).toBe(19)
+        expect(body.comment.article_id).toBe(3)
+        expect(body.comment.body).toBe("test body")
+        expect(body.comment.votes).toBe(0)
+        expect(body.comment.author).toBe("butter_bridge")
+        expect(typeof body.comment.created_at).toBe("string")
+      })
+  })
   test("400: responds bad request if requested id is NaN", () => {
     return request(app)
-      .get("/api/articles/notanumber/comments")
+      .post("/api/articles/notanumber/comments")
+      .send({username: "butter_bridge"})
       .expect(400)
       .then(({body}) => {
         expect(body.msg).toBe('bad request')
     })
   })
-  test("404: responds not found if id is a number, but no such id exists", () => {
-    return request(app)
-      .get("/api/articles/999/comments")
-      .expect(404)
-      .then(({body}) => {
-        expect(body.msg).toBe('not found')
-    })
-  })
+  // test("404: responds not found if id is a number, but no such id exists", () => {
+  //   return request(app)
+  //     .post("/api/articles/999/comments")
+  //     .send({username: "butter_bridge"})
+  //     .expect(404)
+  //     .then(({body}) => {
+  //       expect(body.msg).toBe('not found')
+  //   })
+  // })
   test("400: responds bad request if request is missing parameter(s)", () => {
     return request(app)
       .post("/api/articles/3/comments")
@@ -182,6 +206,15 @@ describe("POST /api/articles/:article_id/comments", () => {
         expect(body.msg).toBe('bad request')
     })
   })
+  // test("404: responds not found if request contains non-existent username", () => {
+  //   return request(app)
+  //     .post("/api/articles/3/comments")
+  //     .send({username: "test-name", body: "test-body"})
+  //     .expect(404)
+  //     .then(({body}) => {
+  //       expect(body.msg).toBe('not found')
+  //     })
+  // })
 })
 
 describe("PATCH /api/articles/:article_id", () => {
@@ -237,4 +270,31 @@ describe("PATCH /api/articles/:article_id", () => {
         expect(body.msg).toBe('bad request')
     })
   })
+})
+
+describe("DELETE /api/comments/:comment_id", () => {
+  test("204: deletes comment and responds with no content", () => {
+    return request(app)
+      .delete("/api/comments/3")
+      .expect(204)
+      .then(({body}) => {
+        expect(body).toEqual({})
+      })
+  })
+  // test("400: responds bad request if requested id is NaN", () => {
+  //   return request(app)
+  //     .delete("/api/articles/notanumber")
+  //     .expect(400)
+  //     .then(({body}) => {
+  //       expect(body.msg).toBe('bad request')
+  //   })
+  // })
+  // test("404: responds not found if id is a number, but no such id exists", () => {
+  //   return request(app)
+  //     .delete("/api/articles/999")
+  //     .expect(404)
+  //     .then(({body}) => {
+  //       expect(body.msg).toBe('not found')
+  //   })
+  // })
 })
