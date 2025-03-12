@@ -385,3 +385,56 @@ describe("GET /api/users/:username", () => {
     })
   })
 })
+
+describe.only("PATCH /api/comments/:comment_id", () => {
+  test("201: responds with patched comment with requested comment id", () => {
+    return request(app)
+      .patch("/api/comments/3")
+      .send({inc_votes: -50})
+      .expect(201)
+      .then(({body}) => {
+        expect(body.comment.comment_id).toBe(3)
+        expect(body.comment.article_id).toBe(1)
+        expect(body.comment.body).toBe("Replacing the quiet elegance of the dark suit and tie with the casual indifference of these muted earth tones is a form of fashion suicide, but, uh, call me crazy — onyou it works.")
+        expect(body.comment.votes).toBe(50)
+        expect(body.comment.author).toBe("icellusedkars")
+        expect(body.comment.created_at).toBe("2020-03-01T01:13:00.000Z")
+      })
+  })
+  test("400: responds bad request if requested id is NaN", () => {
+    return request(app)
+      .patch("/api/comments/notanumber")
+      .send({inc_votes: 10})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+  test("404: responds not found if id is a number, but no such id exists", () => {
+    return request(app)
+      .patch("/api/comments/999")
+      .send({inc_votes: 10})
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
+    })
+  })
+  test("400: responds bad request if request is missing parameter(s)", () => {
+    return request(app)
+      .patch("/api/comments/3")
+      .send({})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: responds bad request if request contains incorrect parameter type", () => {
+    return request(app)
+      .patch("/api/comments/3")
+      .send({inc_votes: "ten"})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+})

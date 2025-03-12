@@ -1,7 +1,7 @@
 const express = require("express")
 const app = express()
 const db = require("./db/connection")
-const { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers, getUserByUsername } = require("./controllers/nc-news.controller")
+// const { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers, getUserByUsername } = require("./controllers/nc-news.controller")
 const { handlePsqlErrors, handleCustomErrors, handleServerErrors } = require("./controllers/errors.controller")
 const apiRouter = require("./routes/api-router")
 

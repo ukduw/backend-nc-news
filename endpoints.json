@@ -123,5 +123,19 @@
         "avatar_url": "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png"
       }
     ]
+  },
+  "PATCH /api/comments/:comment_id": {
+    "description": "patches and serves comment matching requested comment id with updated vote property",
+    "queries": [],
+    "exampleResponse": [
+      {
+        "comment_id": 3,
+        "article_title": "22 Amazing open source React projects",
+        "body": "Qui sunt sit voluptas repellendus sed. Voluptatem et repellat fugiat. Rerum doloribus eveniet quidem vero aut sint officiis. Dolor facere et et architecto vero qui et perferendis dolorem. Magni quis ratione adipisci error assumenda ut. Id rerum eos facere sit nihil ipsam officia aspernatur odio.",
+        "votes": 3,
+        "author": "grumpy19",
+        "created_at": "2020-09-23T01:18:00.000Z"
+      }
+    ]
   }
 }
