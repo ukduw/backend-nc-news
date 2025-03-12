@@ -1,4 +1,4 @@
-const { fetchTopics, checkArticleIdExists, checkCommentIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers } = require("../models/nc-news.model")
+const { fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername } = require("../models/nc-news.model")
 const endpoints = require("../endpoints.json")
 
 function getEndpoints(request, response) {
@@ -100,5 +100,21 @@ function getUsers(request, response, next) {
     })
 }
 
+function getUserByUsername(request, response, next) {
+    const {username} = request.params
 
-module.exports = { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers }
+    const promises = [fetchUserByUsername(username)]
+    if(username) {
+        promises.push(checkUsernameExists(username))
+    }
+
+    Promise.all(promises).then(([user]) => {
+        response.status(200).send({user: user})
+    })
+    .catch((error) => {
+        next(error)
+    })
+}
+
+
+module.exports = { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers, getUserByUsername }

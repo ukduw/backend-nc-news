@@ -364,3 +364,24 @@ describe("GET /api/users", () => {
     })
   })
 })
+
+describe("GET /api/users/:username", () => {
+  test("200: responds with user object of requested username", () => {
+    return request(app)
+      .get("/api/users/butter_bridge")
+      .expect(200)
+      .then(({body}) => {
+          expect(body.user.username).toBe("butter_bridge")
+          expect(body.user.avatar_url).toBe("https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg")
+          expect(body.user.name).toBe("jonny")
+      })
+  })
+  test("404: responds not found if no such username exists", () => {
+    return request(app)
+      .get("/api/users/testusername")
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
+    })
+  })
+})

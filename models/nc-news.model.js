@@ -9,6 +9,10 @@ function fetchTopics() {
 }
 
 function checkArticleIdExists(article_id) {
+    if(typeof Number(article_id) === NaN) {
+        return Promise.reject({status:400, msg: 'bad request'})
+    }
+
     let match = false
     return db.query(`SELECT articles.article_id, COUNT(comments.comment_id) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id GROUP BY articles.article_id`).then(({rows}) => {
         rows.forEach((obj) => {
@@ -23,10 +27,28 @@ function checkArticleIdExists(article_id) {
 }
 
 function checkCommentIdExists(comment_id) {
+    if(typeof Number(comment_id) === NaN) {
+        return Promise.reject({status:400, msg: 'bad request'})
+    }
+
     let match = false
     return db.query(`SELECT comment_id FROM comments`).then(({rows}) => {
         rows.forEach((obj) => {
             if(obj.comment_id === Number(comment_id)) {
+                match = true
+            }
+        })
+        if(match === false) {
+            return Promise.reject({status: 404, msg: 'not found'})
+        }
+    })
+}
+
+function checkUsernameExists(username) {
+    let match = false
+    return db.query(`SELECT username FROM users`).then(({rows}) => {
+        rows.forEach((obj) => {
+            if(obj.username === username) {
                 match = true
             }
         })
@@ -143,5 +165,11 @@ function fetchUsers() {
     })
 }
 
+function fetchUserByUsername(username) {
+    return db.query(`SELECT * FROM users WHERE username = $1`, [username]).then(({rows}) => {
+        return rows[0]
+    })
+}
 
-module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers}
+
+module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername}
