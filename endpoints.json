@@ -166,5 +166,12 @@
         "img_url": ""  
       }
     ]
+  },
+  "DELETE /api/articles/:article_id": {
+    "description": "deletes article and associated comments with requested article id",
+    "queries": [],
+    "exampleResponse": {
+      "body": {}
+    }
   }
 }

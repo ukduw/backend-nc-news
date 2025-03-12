@@ -1,4 +1,4 @@
-const { fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle, insertTopic } = require("../models/nc-news.model")
+const { fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle, insertTopic, deleteArticleById } = require("../models/nc-news.model")
 const endpoints = require("../endpoints.json")
 
 function getEndpoints(request, response) {
@@ -151,5 +151,17 @@ function postTopic(request, response, next) {
     })
 }
 
+function deletesArticleById(request, response, next) {
+    const {article_id} = request.params
 
-module.exports = { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers, getUserByUsername, patchCommentById, postArticle, postTopic }
+    checkArticleIdExists(article_id)
+    .then(()=>{ deleteArticleById(article_id).then(({article}) => {
+            response.status(204).send({article: article})
+        }) 
+    })
+    .catch((error) => {
+        next(error)
+    })
+}
+
+module.exports = { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers, getUserByUsername, patchCommentById, postArticle, postTopic, deletesArticleById }

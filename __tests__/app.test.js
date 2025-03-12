@@ -578,7 +578,7 @@ describe("POST /api/articles", () => {
   })
 })
 
-describe.only("POST /api/topics", () => {
+describe("POST /api/topics", () => {
   test("201: responds with posted topic", () => {
     return request(app)
       .post("/api/topics/")
@@ -618,6 +618,26 @@ describe.only("POST /api/topics", () => {
       .expect(400)
       .then(({body}) => {
         expect(body.msg).toBe('bad request')
+    })
+  })
+})
+
+describe.only("DELETE /api/articles/:article_id", () => {
+  test("204: deletes article and associated comments and responds with no content", () => {
+    return request(app)
+      .delete("/api/articles/3")
+      .expect(204)
+      .then(({body}) => {
+        expect(body).toEqual({})
+      })
+  })
+
+  test("404: responds not found if id does not exist", () => {
+    return request(app)
+      .delete("/api/articles/999")
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
     })
   })
 })

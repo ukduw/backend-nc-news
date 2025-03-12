@@ -276,5 +276,14 @@ function insertTopic(slug, description, img_url) {
     })
 }
 
+function deleteArticleById(article_id) {
+    return db.query(`DELETE FROM comments WHERE article_id = $1`, [article_id])
+    .then(() => {
+        return db.query(`DELETE FROM articles WHERE article_id = $1 RETURNING *`, [article_id]).then(({rows}) => {
+            return rows[0]
+        })
+    })
+}
 
-module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle, insertTopic}
+
+module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle, insertTopic, deleteArticleById}
