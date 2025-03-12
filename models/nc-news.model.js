@@ -138,12 +138,34 @@ function fetchArticles(sort_by, order, topic, limit, p) {
     })
 }
 
-function fetchCommentsByArticleId(article_id) {
-    if(article_id === undefined || Number(article_id) === NaN) {
+function fetchCommentsByArticleId(article_id, limit, p) {
+    let queryString = `SELECT comments.comment_id, comments.votes, comments.created_at, comments.author, comments.body, comments.article_id FROM comments JOIN articles ON comments.article_id = articles.article_id WHERE comments.article_id = $1`
+    let queryValues = [article_id]
+
+    if(limit !== undefined && Number(limit) === NaN) {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    if(p !== undefined && Number(p) === NaN) {
         return Promise.reject({status: 400, msg: 'bad request'})
     }
 
-    return db.query(`SELECT comments.comment_id, comments.votes, comments.created_at, comments.author, comments.body, comments.article_id FROM comments JOIN articles ON comments.article_id = articles.article_id WHERE comments.article_id = $1`, [article_id]).then(({rows}) => {
+    if(limit) {
+        queryString += ` LIMIT $2`
+        queryValues.push(limit)
+    } else {
+        queryString += ` LIMIT 10`
+    }
+
+    const offsetBy = (p - 1) * 10
+    if(p) {
+        queryString += ` OFFSET $2`
+        queryValues.push(offsetBy)
+    } else {
+        queryString += ` OFFSET 0`
+    }
+
+
+    return db.query(queryString, queryValues).then(({rows}) => {
         return rows
     })
 }

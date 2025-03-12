@@ -56,6 +56,7 @@ describe("GET /api/articles/:article_id", () => {
         expect(body.article.comment_count).toBe("2")
       })
   })
+
   test("400: responds bad request if requested id is NaN", () => {
     return request(app)
       .get("/api/articles/notanumber")
@@ -102,7 +103,6 @@ describe("GET /api/articles", () => {
       .get("/api/articles?sort_by=article_id")
       .expect(200)
       .then(({body}) => {
-        console.log(body)
         expect(body.articles).toHaveLength(10)
         expect(body.articles[0].article_id).toBe(13)
         expect(body.articles[9].article_id).toBe(4)
@@ -224,6 +224,25 @@ describe("GET /api/articles/:article_id/comments", () => {
         expect(body.comments).toHaveLength(0)
       })
   })
+  test("200: (limit) responds with comment objects with LIMIT, on query", () => {
+    return request(app)
+    .get("/api/articles/1/comments?limit=7")
+    .expect(200)
+    .then(({body}) => {
+      expect(body.comments).toHaveLength(7)
+    })
+  })
+  test("200: (p) responds with page of comment objects, on query", () => {
+    return request(app)
+      .get("/api/articles/1/comments?p=2")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.comments).toHaveLength(1)
+
+        expect(body.comments[0].comment_id).toBe(18)
+      })
+  })
+
   test("400: responds bad request if requested id is NaN", () => {
     return request(app)
       .get("/api/articles/notanumber/comments")
@@ -238,6 +257,22 @@ describe("GET /api/articles/:article_id/comments", () => {
       .expect(404)
       .then(({body}) => {
         expect(body.msg).toBe('not found')
+      })
+  })
+  test("400: (limit) responds bad request if requested a NaN limit", () => {
+    return request(app)
+        .get("/api/articles/3/comments?limit=one")
+        .expect(400)
+        .then(({body}) => {
+            expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: (p) responds bad request if requested a NaN page", () => {
+    return request(app)
+        .get("/api/articles/3/comments?p=three")
+        .expect(400)
+        .then(({body}) => {
+            expect(body.msg).toBe('bad request')
       })
   })
 })
@@ -271,6 +306,7 @@ describe("POST /api/articles/:article_id/comments", () => {
         expect(typeof body.comment.created_at).toBe("string")
       })
   })
+
   test("400: responds bad request if requested id is NaN", () => {
     return request(app)
       .post("/api/articles/notanumber/comments")
@@ -335,6 +371,7 @@ describe("PATCH /api/articles/:article_id", () => {
         expect(body.article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
       })
   })
+
   test("400: responds bad request if requested id is NaN", () => {
     return request(app)
       .patch("/api/articles/notanumber")
@@ -382,6 +419,7 @@ describe("DELETE /api/comments/:comment_id", () => {
         expect(body).toEqual({})
       })
   })
+
   test("404: responds not found if id does not exist", () => {
     return request(app)
       .delete("/api/comments/999")
@@ -419,6 +457,7 @@ describe("GET /api/users/:username", () => {
           expect(body.user.name).toBe("jonny")
       })
   })
+
   test("404: responds not found if no such username exists", () => {
     return request(app)
       .get("/api/users/testusername")
@@ -444,6 +483,7 @@ describe("PATCH /api/comments/:comment_id", () => {
         expect(body.comment.created_at).toBe("2020-03-01T01:13:00.000Z")
       })
   })
+
   test("400: responds bad request if requested id is NaN", () => {
     return request(app)
       .patch("/api/comments/notanumber")
@@ -517,6 +557,7 @@ describe("POST /api/articles", () => {
         expect(body.article.comment_count).toBe("0")
       })
   })
+
   test("400: responds bad request if request is missing parameter(s)", () => {
     return request(app)
       .post("/api/articles/")

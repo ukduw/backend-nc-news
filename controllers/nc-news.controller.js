@@ -35,8 +35,9 @@ function getArticles(request, response, next) {
 
 function getCommentsByArticleId(request, response, next) {
     const {article_id} = request.params
+    const {limit, p} = request.query
 
-    const promises = [fetchCommentsByArticleId(article_id)]
+    const promises = [fetchCommentsByArticleId(article_id, limit, p)]
     if(article_id) {
         promises.push(checkArticleIdExists(article_id))
     }
