@@ -577,3 +577,47 @@ describe("POST /api/articles", () => {
     })
   })
 })
+
+describe.only("POST /api/topics", () => {
+  test("201: responds with posted topic", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({slug: "topic-name", description: "test-description"})
+      .expect(201)
+      .then(({body}) => {
+        expect(body.topic.slug).toBe("topic-name")
+        expect(body.topic.description).toBe("test-description")
+        expect(body.topic.img_url).toBe("")
+      })
+  })
+  test("201: posts and ignores unnecessary properties in post object", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({testparam: "nothing", slug: "topic-name", description: "test-description", img_url: "test-url"})
+      .expect(201)
+      .then(({body}) => {
+        expect(body.topic.slug).toBe("topic-name")
+        expect(body.topic.description).toBe("test-description")
+        expect(body.topic.img_url).toBe("test-url")
+      })
+  })
+
+  test("400: responds bad request if request is missing parameter(s)", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({slug: "topic-name"})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: responds bad request if request contains incorrect parameter type", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({slug: 123, description: 123, img_url: 123})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+})

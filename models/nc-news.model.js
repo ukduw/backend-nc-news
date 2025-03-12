@@ -256,5 +256,25 @@ function insertArticle(author, title, body, topic, article_img_url) {
 
 }
 
+function insertTopic(slug, description, img_url) {
+    if(slug === undefined || description === undefined) {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    if(typeof slug !== 'string' || typeof description !== 'string') {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
 
-module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle}
+    if(img_url && typeof img_url !== 'string') {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    if(img_url === undefined) {
+        img_url = ""
+    }
+
+    return db.query(`INSERT INTO topics (slug, description, img_url) VALUES ($1, $2, $3) RETURNING *`, [slug, description, img_url]).then(({rows}) => {
+        return rows[0]
+    })
+}
+
+
+module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle, insertTopic}
