@@ -1,4 +1,4 @@
-const { fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById } = require("../models/nc-news.model")
+const { fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle } = require("../models/nc-news.model")
 const endpoints = require("../endpoints.json")
 
 function getEndpoints(request, response) {
@@ -128,5 +128,16 @@ function patchCommentById(request, response, next) {
     })
 }
 
+function postArticle(request, response, next) {
+    const {author, title, body, topic, article_img_url} = request.body
 
-module.exports = { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers, getUserByUsername, patchCommentById }
+    insertArticle(author, title, body, topic, article_img_url).then((article) => {
+        response.status(201).send({article: article})
+    })
+    .catch((error) => {
+        next(error)
+    })
+}
+
+
+module.exports = { getEndpoints, getTopics, getArticleById, getArticles, getCommentsByArticleId, postCommentByArticleId, patchArticleById, deletesCommentById, getUsers, getUserByUsername, patchCommentById, postArticle }

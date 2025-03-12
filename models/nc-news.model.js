@@ -184,5 +184,31 @@ function updateCommentById(comment_id, inc_votes) {
     })
 }
 
+function insertArticle(author, title, body, topic, article_img_url) {
+    if(author === undefined || title === undefined || body === undefined || topic === undefined) {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    if(typeof author !== 'string' || typeof title !== 'string' || typeof body !== 'string' || typeof body !== 'string') {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
 
-module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById}
+    if(article_img_url && typeof article_img_url !== 'string') {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    if(article_img_url === undefined) {
+        article_img_url = ""
+    }
+
+    let queryArticleId = 0
+    return db.query(`INSERT INTO articles (author, title, body, topic, article_img_url) VALUES ($1, $2, $3, $4, $5) RETURNING *`, [author, title, body, topic, article_img_url])
+    .then(({rows}) => { queryArticleId = rows[0].article_id })
+    .then(() => {
+        return db.query(`SELECT articles.article_id, articles.author, articles.title, articles.body, articles.topic, articles.votes, articles.created_at, articles.article_img_url, COUNT(comments.comment_id) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id WHERE articles.article_id = $1 GROUP BY articles.article_id`, [queryArticleId]).then(({rows}) => {
+            return rows[0]
+        })
+    })
+
+}
+
+
+module.exports = {fetchTopics, checkArticleIdExists, checkCommentIdExists, checkUsernameExists, fetchArticleById, fetchArticles, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleById, deleteCommentById, fetchUsers, fetchUserByUsername, updateCommentById, insertArticle}

@@ -386,7 +386,7 @@ describe("GET /api/users/:username", () => {
   })
 })
 
-describe.only("PATCH /api/comments/:comment_id", () => {
+describe("PATCH /api/comments/:comment_id", () => {
   test("201: responds with patched comment with requested comment id", () => {
     return request(app)
       .patch("/api/comments/3")
@@ -432,6 +432,61 @@ describe.only("PATCH /api/comments/:comment_id", () => {
     return request(app)
       .patch("/api/comments/3")
       .send({inc_votes: "ten"})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+})
+
+describe.only("POST /api/articles", () => {
+  test("201: responds with posted article, with comment count", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({author: "butter_bridge", title: "test-title", body: "test-body", topic: "cats"})
+      .expect(201)
+      .then(({body}) => {
+        expect(body.article.article_id).toBe(14)
+        expect(body.article.author).toBe("butter_bridge")
+        expect(body.article.title).toBe("test-title")
+        expect(body.article.body).toBe("test-body")
+        expect(body.article.topic).toBe("cats")
+        expect(body.article.votes).toBe(0)
+        expect(body.article.article_img_url).toBe("")
+        expect(typeof body.article.created_at).toBe("string")
+        expect(body.article.comment_count).toBe("0")
+      })
+  })
+  test("201: posts and ignores unnecessary properties in post object", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({nothing: "test", testparam: "test", author: "butter_bridge", title: "test-title", body: "test-body", topic: "cats"})
+      .expect(201)
+      .then(({body}) => {
+        expect(body.article.article_id).toBe(14)
+        expect(body.article.author).toBe("butter_bridge")
+        expect(body.article.title).toBe("test-title")
+        expect(body.article.body).toBe("test-body")
+        expect(body.article.topic).toBe("cats")
+        expect(body.article.votes).toBe(0)
+        expect(body.article.article_img_url).toBe("")
+        expect(typeof body.article.created_at).toBe("string")
+        expect(body.article.comment_count).toBe("0")
+      })
+  })
+  test("400: responds bad request if request is missing parameter(s)", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({author: "butter_bridge"})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: responds bad request if request contains incorrect parameter type", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({author: 123, title: 123, body: 123})
       .expect(400)
       .then(({body}) => {
         expect(body.msg).toBe('bad request')
