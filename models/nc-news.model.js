@@ -68,8 +68,8 @@ function fetchArticleById(article_id) {
     })
 }
 
-function fetchArticles(sort_by, order, topic) {
-    let queryString = `SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url, COUNT(comments.comment_id) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id`
+function fetchArticles(sort_by, order, topic, limit, p) {
+    let queryString = `SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url, COUNT(comments.comment_id) AS comment_count, (SELECT COUNT(articles.article_id) FROM articles) AS total_count FROM articles FULL JOIN comments ON articles.article_id = comments.article_id`
     let queryValues = []
 
     // GREENLIST TOPIC
@@ -106,6 +106,30 @@ function fetchArticles(sort_by, order, topic) {
         queryString += " ASC"
     } else {
         queryString += " DESC"
+    }
+
+    // GREENLIST LIMIT
+    if(limit !== undefined && Number(limit) === NaN) {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    if(limit) {
+        queryString += ` LIMIT $1`
+        queryValues.push(limit)
+    } else {
+        queryString += ` LIMIT 10`
+    }
+
+    // GREENLIST PAGE (OFFSET)
+    if(p !== undefined && Number(p) === NaN) {
+        return Promise.reject({status: 400, msg: 'bad request'})
+    }
+    const offsetBy = (p - 1) * 10
+
+    if(p) {
+        queryString += ` OFFSET $1`
+        queryValues.push(offsetBy)
+    } else {
+        queryString += ` OFFSET 0`
     }
 
 

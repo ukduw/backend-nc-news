@@ -80,7 +80,7 @@ describe("GET /api/articles", () => {
       .get("/api/articles")
       .expect(200)
       .then(({body}) => {
-        expect(body.articles).toHaveLength(13)
+        expect(body.articles).toHaveLength(10)
         body.articles.forEach((article) => {
           expect(typeof article.author).toBe("string")
           expect(typeof article.title).toBe("string")
@@ -102,9 +102,10 @@ describe("GET /api/articles", () => {
       .get("/api/articles?sort_by=article_id")
       .expect(200)
       .then(({body}) => {
-        expect(body.articles).toHaveLength(13)
+        console.log(body)
+        expect(body.articles).toHaveLength(10)
         expect(body.articles[0].article_id).toBe(13)
-        expect(body.articles[12].article_id).toBe(1)
+        expect(body.articles[9].article_id).toBe(4)
       })
   })
   test("200: (order) responds with sorted article objects, ASC or DESC, on query", () => {
@@ -124,12 +125,38 @@ describe("GET /api/articles", () => {
       .get("/api/articles?topic=mitch")
       .expect(200)
       .then(({body}) => {
-        expect(body.articles).toHaveLength(12)
+        expect(body.articles).toHaveLength(10)
         body.articles.forEach((article) => {
           expect(article.topic).toBe("mitch")
         })
       })
   })
+  test("200: (limit) responds with article objects with LIMIT, on query", () => {
+    return request(app)
+      .get("/api/articles?limit=7")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.articles).toHaveLength(7)
+        body.articles.forEach((article) => {
+          expect(article.total_count).toBe("13")
+        })
+      })
+  })
+  test("200: (p) responds with page of article objects, on query", () => {
+    return request(app)
+      .get("/api/articles?p=2")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.articles).toHaveLength(3)
+
+        expect(body.articles[0].title).toBe("Does Mitch predate civilisation?")
+        expect(body.articles[2].title).toBe("Z")
+        body.articles.forEach((article) => {
+          expect(article.total_count).toBe("13")
+        })
+      })
+  })
+
   test("400: (sort_by) responds bad request when queried with non-greenlisted column name", () => {
     return request(app)
       .get("/api/articles?sort_by=notacolumn")
@@ -152,6 +179,22 @@ describe("GET /api/articles", () => {
       .expect(400)
       .then(({body}) => {
         expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: (limit) responds bad request if requested a NaN limit", () => {
+    return request(app)
+        .get("/api/articles?limit=one")
+        .expect(400)
+        .then(({body}) => {
+            expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: (p) responds bad request if requested a NaN page", () => {
+    return request(app)
+        .get("/api/articles?p=three")
+        .expect(400)
+        .then(({body}) => {
+            expect(body.msg).toBe('bad request')
       })
   })
 })
@@ -439,7 +482,7 @@ describe("PATCH /api/comments/:comment_id", () => {
   })
 })
 
-describe.only("POST /api/articles", () => {
+describe("POST /api/articles", () => {
   test("201: responds with posted article, with comment count", () => {
     return request(app)
       .post("/api/articles/")
