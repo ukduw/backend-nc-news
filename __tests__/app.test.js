@@ -4,6 +4,7 @@ const seed = require("../db/seeds/seed.js")
 const data = require("../db/data/test-data")
 const request = require("supertest")
 const app = require("../app.js")
+const jestsorted = require("jest-sorted")
 
 beforeEach(() => {
   return seed(data)
@@ -14,12 +15,12 @@ afterAll(() => {
 })
 
 describe("GET /api", () => {
-  test.skip("200: Responds with an object detailing the documentation for each endpoint", () => {
+  test("200: Responds with an object detailing the documentation for each endpoint", () => {
     return request(app)
       .get("/api")
       .expect(200)
-      .then(({ body: { endpoints } }) => {
-        expect(endpoints).toEqual(endpointsJson);
+      .then(({body}) => {
+        expect(body).toEqual(endpointsJson);
       });
   });
 });
@@ -40,20 +41,30 @@ describe("GET /api/topics", () => {
 })
 
 describe("GET /api/articles/:article_id", () => {
-  test("200: responds with article object of requested id, with comment count", () => {
+  test("200: responds with article object of requested id", () => {
     return request(app)
       .get("/api/articles/3")
       .expect(200)
       .then(({body}) => {
-        expect(body.article.author).toBe("icellusedkars")
-        expect(body.article.title).toBe("Eight pug gifs that remind me of mitch")
-        expect(body.article.article_id).toBe(3)
-        expect(body.article.body).toBe("some gifs")
-        expect(body.article.topic).toBe("mitch")
-        expect(body.article.created_at).toBe("2020-11-03T09:12:00.000Z")
-        expect(body.article.votes).toBe(0)
-        expect(body.article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-        expect(body.article.comment_count).toBe("2")
+        const expectedOutput = {
+          author: "icellusedkars", 
+          title: "Eight pug gifs that remind me of mitch", 
+          article_id: 3, 
+          body: "some gifs", 
+          topic: "mitch", 
+          created_at: "2020-11-03T09:12:00.000Z", 
+          votes: 0, 
+          article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
+          }
+        expect(body.article).toMatchObject(expectedOutput)
+      })
+  })
+  test("200: article object has comment count property", () => {
+    return request(app)
+      .get("/api/articles/6")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.article.comment_count).toBe("1")
       })
   })
 
@@ -92,10 +103,8 @@ describe("GET /api/articles", () => {
           expect(typeof article.article_img_url).toBe("string")
           expect(typeof article.comment_count).toBe("string")
         })
-        const sortedByDESC = body.articles.toSorted((a, b) => {
-          return b.created_at - a.created_at
-        })
-        expect(body.articles).toEqual(sortedByDESC)
+
+        expect(body.articles).toBeSortedBy("created_at", {descending: true})
       })
   })
   test("200: (sort_by) responds with article objects sorted by requested column, on query", () => {
@@ -103,9 +112,7 @@ describe("GET /api/articles", () => {
       .get("/api/articles?sort_by=article_id")
       .expect(200)
       .then(({body}) => {
-        expect(body.articles).toHaveLength(10)
-        expect(body.articles[0].article_id).toBe(13)
-        expect(body.articles[9].article_id).toBe(4)
+        expect(body.articles).toBeSortedBy('article_id', {descending: true})
       })
   })
   test("200: (order) responds with sorted article objects, ASC or DESC, on query", () => {
@@ -114,10 +121,7 @@ describe("GET /api/articles", () => {
       .expect(200)
       .then(({body}) => {
         // default sort by: created_at
-        const sortedByASC = body.articles.toSorted((a, b) => {
-          return a.created_at - b.created_at
-        })
-      expect(body.articles).toEqual(sortedByASC)
+        expect(body.articles).toBeSortedBy('created_at', {ascending: true})
       })
   })
   test("200: (topic) responds with article objects, filtered by topic, on query", () => {
@@ -131,7 +135,15 @@ describe("GET /api/articles", () => {
         })
       })
   })
-  test("200: (limit) responds with article objects with LIMIT, on query", () => {
+  test("200: (topic) responds with empty object when queried valid, but empty, topic", () => {
+    return request(app)
+      .get("/api/articles?topic=paper")
+      .expect(200)
+      .then(({body}) => {
+        expect(body.articles).toHaveLength(0)
+      })
+  })
+  test("200: (limit) responds with article objects with LIMIT, on query, and total article count", () => {
     return request(app)
       .get("/api/articles?limit=7")
       .expect(200)
@@ -173,7 +185,7 @@ describe("GET /api/articles", () => {
         expect(body.msg).toBe('bad request')
       })
   })
-  test("400: (topic) responds bad request when queried with non-greenlisted topic name", () => {
+  test("400: (topic) responds bad request when queried with non-existent topic name", () => {
     return request(app)
       .get("/api/articles?topic=slug")
       .expect(400)
@@ -277,6 +289,110 @@ describe("GET /api/articles/:article_id/comments", () => {
   })
 })
 
+describe("GET /api/users", () => {
+  test("200: responds with array of all user objects", () => {
+    return request(app)
+    .get("/api/users")
+    .expect(200)
+    .then(({body}) => {
+      expect(body.users).toHaveLength(4)
+      body.users.forEach((user) => {
+        expect(typeof user.username).toBe("string")
+        expect(typeof user.name).toBe("string")
+        expect(typeof user.avatar_url).toBe("string")
+      })
+    })
+  })
+})
+
+describe("GET /api/users/:username", () => {
+  test("200: responds with user object of requested username", () => {
+    return request(app)
+      .get("/api/users/butter_bridge")
+      .expect(200)
+      .then(({body}) => {
+        const expectedOutput = {
+          username: "butter_bridge", 
+          avatar_url: "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg", 
+          name: "jonny"
+        }
+        expect(body.user).toMatchObject(expectedOutput)
+      })
+  })
+
+  test("404: responds not found if no such username exists", () => {
+    return request(app)
+      .get("/api/users/testusername")
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
+    })
+  })
+})
+
+
+describe("POST /api/articles", () => {
+  test("201: responds with posted article, with comment count", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({author: "butter_bridge", title: "test-title", body: "test-body", topic: "cats"})
+      .expect(201)
+      .then(({body}) => {
+        const expectedOutput = {
+          article_id: 14, 
+          author: "butter_bridge", 
+          title: "test-title",
+          body: "test-body", 
+          topic: "cats", 
+          votes: 0,
+          article_img_url: "",
+          comment_count: "0"
+        }
+        expect(body.article).toMatchObject(expectedOutput)
+        expect(typeof body.article.created_at).toBe("string")
+      })
+  })
+  test("201: posts and ignores unnecessary properties in post object", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({nothing: "test", testparam: "test", author: "butter_bridge", title: "test-title", body: "test-body", topic: "cats"})
+      .expect(201)
+      .then(({body}) => {
+        const expectedOutput = {
+          article_id: 14, 
+          author: "butter_bridge", 
+          title: "test-title",
+          body: "test-body", 
+          topic: "cats", 
+          votes: 0,
+          article_img_url: "",
+          comment_count: "0"
+        }
+        expect(body.article).toMatchObject(expectedOutput)
+        expect(typeof body.article.created_at).toBe("string")
+      })
+  })
+
+  test("400: responds bad request if request is missing parameter(s)", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({author: "butter_bridge"})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: responds bad request if request contains incorrect parameter type", () => {
+    return request(app)
+      .post("/api/articles/")
+      .send({author: 123, title: 123, body: 123})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+})
+
 describe("POST /api/articles/:article_id/comments", () => {
   test("201: responds with posted comment to requested article id", () => {
     return request(app)
@@ -284,11 +400,15 @@ describe("POST /api/articles/:article_id/comments", () => {
       .send({author: "butter_bridge", body: "test body test body"})
       .expect(201)
       .then(({body}) => {
-        expect(body.comment.comment_id).toBe(19)
-        expect(body.comment.article_id).toBe(3)
-        expect(body.comment.body).toBe("test body test body")
-        expect(body.comment.votes).toBe(0)
-        expect(body.comment.author).toBe("butter_bridge")
+        const expectedOutput = {
+          comment_id: 19, 
+          article_id: 3, 
+          body: "test body test body", 
+          votes: 0, 
+          author: "butter_bridge"
+        }
+        expect(body.comment).toMatchObject(expectedOutput)
+
         expect(typeof body.comment.created_at).toBe("string")
       })
   })
@@ -298,11 +418,15 @@ describe("POST /api/articles/:article_id/comments", () => {
       .send({author: "butter_bridge", body: "test body", votes: 50, test: "test"})
       .expect(201)
       .then(({body}) => {
-        expect(body.comment.comment_id).toBe(19)
-        expect(body.comment.article_id).toBe(3)
-        expect(body.comment.body).toBe("test body")
-        expect(body.comment.votes).toBe(0)
-        expect(body.comment.author).toBe("butter_bridge")
+        const expectedOutput = {
+          comment_id: 19, 
+          article_id:3, 
+          body: "test body", 
+          votes: 0, 
+          author: "butter_bridge"
+        }
+        expect(body.comment).toMatchObject(expectedOutput)
+
         expect(typeof body.comment.created_at).toBe("string")
       })
   })
@@ -354,6 +478,57 @@ describe("POST /api/articles/:article_id/comments", () => {
   })
 })
 
+describe("POST /api/topics", () => {
+  test("201: responds with posted topic", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({slug: "topic-name", description: "test-description"})
+      .expect(201)
+      .then(({body}) => {
+        const expectedOutput = {
+          slug: "topic-name",
+          description: "test-description",
+          img_url: ""
+        }
+        expect(body.topic).toMatchObject(expectedOutput)
+      })
+  })
+  test("201: posts and ignores unnecessary properties in post object", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({testparam: "nothing", slug: "topic-name", description: "test-description", img_url: "test-url"})
+      .expect(201)
+      .then(({body}) => {
+        const expectedOutput = {
+          slug: "topic-name",
+          description: "test-description",
+          img_url: "test-url"
+        }
+        expect(body.topic).toMatchObject(expectedOutput)
+      })
+  })
+
+  test("400: responds bad request if request is missing parameter(s)", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({slug: "topic-name"})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+      })
+  })
+  test("400: responds bad request if request contains incorrect parameter type", () => {
+    return request(app)
+      .post("/api/topics/")
+      .send({slug: 123, description: 123, img_url: 123})
+      .expect(400)
+      .then(({body}) => {
+        expect(body.msg).toBe('bad request')
+    })
+  })
+})
+
+
 describe("PATCH /api/articles/:article_id", () => {
   test("201: responds with patched article with requested article id", () => {
     return request(app)
@@ -361,14 +536,17 @@ describe("PATCH /api/articles/:article_id", () => {
       .send({inc_votes: -50})
       .expect(201)
       .then(({body}) => {
-        expect(body.article.article_id).toBe(3)
-        expect(body.article.title).toBe("Eight pug gifs that remind me of mitch")
-        expect(body.article.topic).toBe("mitch")
-        expect(body.article.author).toBe("icellusedkars")
-        expect(body.article.body).toBe("some gifs")
-        expect(body.article.created_at).toBe("2020-11-03T09:12:00.000Z")
-        expect(body.article.votes).toBe(-50)
-        expect(body.article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+        const expectedOutput = {
+          article_id: 3, 
+          title: "Eight pug gifs that remind me of mitch", 
+          topic: "mitch", 
+          author: "icellusedkars", 
+          body: "some gifs", 
+          created_at: "2020-11-03T09:12:00.000Z", 
+          votes: -50, 
+          article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
+        }
+        expect(body.article).toMatchObject(expectedOutput)
       })
   })
 
@@ -410,64 +588,6 @@ describe("PATCH /api/articles/:article_id", () => {
   })
 })
 
-describe("DELETE /api/comments/:comment_id", () => {
-  test("204: deletes comment and responds with no content", () => {
-    return request(app)
-      .delete("/api/comments/3")
-      .expect(204)
-      .then(({body}) => {
-        expect(body).toEqual({})
-      })
-  })
-
-  test("404: responds not found if id does not exist", () => {
-    return request(app)
-      .delete("/api/comments/999")
-      .expect(404)
-      .then(({body}) => {
-        expect(body.msg).toBe('not found')
-    })
-  })
-})
-
-describe("GET /api/users", () => {
-  test("200: responds with array of all user objects", () => {
-    return request(app)
-    .get("/api/users")
-    .expect(200)
-    .then(({body}) => {
-      expect(body.users).toHaveLength(4)
-      body.users.forEach((user) => {
-        expect(typeof user.username).toBe("string")
-        expect(typeof user.name).toBe("string")
-        expect(typeof user.avatar_url).toBe("string")
-      })
-    })
-  })
-})
-
-describe("GET /api/users/:username", () => {
-  test("200: responds with user object of requested username", () => {
-    return request(app)
-      .get("/api/users/butter_bridge")
-      .expect(200)
-      .then(({body}) => {
-          expect(body.user.username).toBe("butter_bridge")
-          expect(body.user.avatar_url).toBe("https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg")
-          expect(body.user.name).toBe("jonny")
-      })
-  })
-
-  test("404: responds not found if no such username exists", () => {
-    return request(app)
-      .get("/api/users/testusername")
-      .expect(404)
-      .then(({body}) => {
-        expect(body.msg).toBe('not found')
-    })
-  })
-})
-
 describe("PATCH /api/comments/:comment_id", () => {
   test("201: responds with patched comment with requested comment id", () => {
     return request(app)
@@ -475,12 +595,15 @@ describe("PATCH /api/comments/:comment_id", () => {
       .send({inc_votes: -50})
       .expect(201)
       .then(({body}) => {
-        expect(body.comment.comment_id).toBe(3)
-        expect(body.comment.article_id).toBe(1)
-        expect(body.comment.body).toBe("Replacing the quiet elegance of the dark suit and tie with the casual indifference of these muted earth tones is a form of fashion suicide, but, uh, call me crazy — onyou it works.")
-        expect(body.comment.votes).toBe(50)
-        expect(body.comment.author).toBe("icellusedkars")
-        expect(body.comment.created_at).toBe("2020-03-01T01:13:00.000Z")
+        const expectedOutput = {
+          comment_id: 3, 
+          article_id: 1, 
+          body: "Replacing the quiet elegance of the dark suit and tie with the casual indifference of these muted earth tones is a form of fashion suicide, but, uh, call me crazy — onyou it works.", 
+          votes: 50, 
+          author: "icellusedkars", 
+          created_at: "2020-03-01T01:13:00.000Z"
+        }
+        expect(body.comment).toMatchObject(expectedOutput)
       })
   })
 
@@ -522,107 +645,8 @@ describe("PATCH /api/comments/:comment_id", () => {
   })
 })
 
-describe("POST /api/articles", () => {
-  test("201: responds with posted article, with comment count", () => {
-    return request(app)
-      .post("/api/articles/")
-      .send({author: "butter_bridge", title: "test-title", body: "test-body", topic: "cats"})
-      .expect(201)
-      .then(({body}) => {
-        expect(body.article.article_id).toBe(14)
-        expect(body.article.author).toBe("butter_bridge")
-        expect(body.article.title).toBe("test-title")
-        expect(body.article.body).toBe("test-body")
-        expect(body.article.topic).toBe("cats")
-        expect(body.article.votes).toBe(0)
-        expect(body.article.article_img_url).toBe("")
-        expect(typeof body.article.created_at).toBe("string")
-        expect(body.article.comment_count).toBe("0")
-      })
-  })
-  test("201: posts and ignores unnecessary properties in post object", () => {
-    return request(app)
-      .post("/api/articles/")
-      .send({nothing: "test", testparam: "test", author: "butter_bridge", title: "test-title", body: "test-body", topic: "cats"})
-      .expect(201)
-      .then(({body}) => {
-        expect(body.article.article_id).toBe(14)
-        expect(body.article.author).toBe("butter_bridge")
-        expect(body.article.title).toBe("test-title")
-        expect(body.article.body).toBe("test-body")
-        expect(body.article.topic).toBe("cats")
-        expect(body.article.votes).toBe(0)
-        expect(body.article.article_img_url).toBe("")
-        expect(typeof body.article.created_at).toBe("string")
-        expect(body.article.comment_count).toBe("0")
-      })
-  })
 
-  test("400: responds bad request if request is missing parameter(s)", () => {
-    return request(app)
-      .post("/api/articles/")
-      .send({author: "butter_bridge"})
-      .expect(400)
-      .then(({body}) => {
-        expect(body.msg).toBe('bad request')
-      })
-  })
-  test("400: responds bad request if request contains incorrect parameter type", () => {
-    return request(app)
-      .post("/api/articles/")
-      .send({author: 123, title: 123, body: 123})
-      .expect(400)
-      .then(({body}) => {
-        expect(body.msg).toBe('bad request')
-    })
-  })
-})
-
-describe("POST /api/topics", () => {
-  test("201: responds with posted topic", () => {
-    return request(app)
-      .post("/api/topics/")
-      .send({slug: "topic-name", description: "test-description"})
-      .expect(201)
-      .then(({body}) => {
-        expect(body.topic.slug).toBe("topic-name")
-        expect(body.topic.description).toBe("test-description")
-        expect(body.topic.img_url).toBe("")
-      })
-  })
-  test("201: posts and ignores unnecessary properties in post object", () => {
-    return request(app)
-      .post("/api/topics/")
-      .send({testparam: "nothing", slug: "topic-name", description: "test-description", img_url: "test-url"})
-      .expect(201)
-      .then(({body}) => {
-        expect(body.topic.slug).toBe("topic-name")
-        expect(body.topic.description).toBe("test-description")
-        expect(body.topic.img_url).toBe("test-url")
-      })
-  })
-
-  test("400: responds bad request if request is missing parameter(s)", () => {
-    return request(app)
-      .post("/api/topics/")
-      .send({slug: "topic-name"})
-      .expect(400)
-      .then(({body}) => {
-        expect(body.msg).toBe('bad request')
-      })
-  })
-  test("400: responds bad request if request contains incorrect parameter type", () => {
-    return request(app)
-      .post("/api/topics/")
-      .send({slug: 123, description: 123, img_url: 123})
-      .expect(400)
-      .then(({body}) => {
-        expect(body.msg).toBe('bad request')
-    })
-  })
-})
-
-describe.only("DELETE /api/articles/:article_id", () => {
+describe("DELETE /api/articles/:article_id", () => {
   test("204: deletes article and associated comments and responds with no content", () => {
     return request(app)
       .delete("/api/articles/3")
@@ -635,6 +659,26 @@ describe.only("DELETE /api/articles/:article_id", () => {
   test("404: responds not found if id does not exist", () => {
     return request(app)
       .delete("/api/articles/999")
+      .expect(404)
+      .then(({body}) => {
+        expect(body.msg).toBe('not found')
+    })
+  })
+})
+
+describe("DELETE /api/comments/:comment_id", () => {
+  test("204: deletes comment and responds with no content", () => {
+    return request(app)
+      .delete("/api/comments/3")
+      .expect(204)
+      .then(({body}) => {
+        expect(body).toEqual({})
+      })
+  })
+
+  test("404: responds not found if id does not exist", () => {
+    return request(app)
+      .delete("/api/comments/999")
       .expect(404)
       .then(({body}) => {
         expect(body.msg).toBe('not found')
