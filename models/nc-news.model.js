@@ -58,6 +58,19 @@ function checkUsernameExists(username) {
     })
 }
 
+function checkTopicExists(topic) {
+    let match = false
+    return db.query(`SELECT slug FROM topics`).then(({rows}) => {
+        rows.forEach((obj) => {
+            if(obj.slug === topic) {
+                match = true
+            }
+        })
+        
+        return match
+    })
+}
+
 function fetchArticleById(article_id) {
     return db.query(`SELECT articles.author, articles.title, articles.article_id, articles.body, articles.topic, articles.created_at, articles.votes, articles.article_img_url, COUNT(comments.comment_id) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id WHERE articles.article_id = $1 GROUP BY articles.article_id`, [article_id])
     .then(({rows}) => {
@@ -73,68 +86,71 @@ function fetchArticles(sort_by, order, topic, limit, p) {
     let queryValues = []
 
     // GREENLIST TOPIC
-    const allowedTopics = ["mitch", "cats", "paper"]
-    if(topic !== undefined && !allowedTopics.includes(topic)) {
-        return Promise.reject({status: 400, msg: "bad request"})
-    }
-
-    if(topic) {
-        queryString += ` WHERE articles.topic = $1`
-        queryValues.push(topic)
-    }
-    queryString += " GROUP BY articles.article_id"
-
-    // GREENLIST SORT_BY
-    const allowedColumns = ["article_id", "title", "topic", "author", "body", "created_at", "votes", "article_img_url"]
-    if(sort_by !== undefined && !allowedColumns.includes(sort_by)) {
-        return Promise.reject({status: 400, msg: "bad request"})
-    }
-
-    if(sort_by) {
-        queryString += ` ORDER BY articles.${sort_by}`
-    } else {
-        queryString += " ORDER BY articles.created_at"
-    }
-
-    // GREENLIST ORDER
-    const allowedOrders = ["asc", "desc"]
-    if(order !== undefined && !allowedOrders.includes(order)) {
-        return Promise.reject({status: 400, msg: "bad request"})
-    }
-
-    if(order === "asc") {
-        queryString += " ASC"
-    } else {
-        queryString += " DESC"
-    }
-
-    // GREENLIST LIMIT
-    if(limit !== undefined && Number(limit) === NaN) {
-        return Promise.reject({status: 400, msg: 'bad request'})
-    }
-    if(limit) {
-        queryString += ` LIMIT $1`
-        queryValues.push(limit)
-    } else {
-        queryString += ` LIMIT 10`
-    }
-
-    // GREENLIST PAGE (OFFSET)
-    if(p !== undefined && Number(p) === NaN) {
-        return Promise.reject({status: 400, msg: 'bad request'})
-    }
-    const offsetBy = (p - 1) * 10
-
-    if(p) {
-        queryString += ` OFFSET $1`
-        queryValues.push(offsetBy)
-    } else {
-        queryString += ` OFFSET 0`
-    }
-
-
-    return db.query(queryString, queryValues).then(({rows}) => {
-        return rows
+    return checkTopicExists(topic)
+    .then((match) => {
+        if(topic !== undefined && !match) {
+            return Promise.reject({status:400, msg: 'bad request'})
+        }
+    })
+    .then(() => {
+        if(topic) {
+            queryString += ` WHERE articles.topic = $1`
+            queryValues.push(topic)
+        }
+        queryString += " GROUP BY articles.article_id"
+    
+        // GREENLIST SORT_BY
+        const allowedColumns = ["article_id", "title", "topic", "author", "body", "created_at", "votes", "article_img_url"]
+        if(sort_by !== undefined && !allowedColumns.includes(sort_by)) {
+            return Promise.reject({status: 400, msg: "bad request"})
+        }
+    
+        if(sort_by) {
+            queryString += ` ORDER BY articles.${sort_by}`
+        } else {
+            queryString += " ORDER BY articles.created_at"
+        }
+    
+        // GREENLIST ORDER
+        const allowedOrders = ["asc", "desc"]
+        if(order !== undefined && !allowedOrders.includes(order)) {
+            return Promise.reject({status: 400, msg: "bad request"})
+        }
+    
+        if(order === "asc") {
+            queryString += " ASC"
+        } else {
+            queryString += " DESC"
+        }
+    
+        // GREENLIST LIMIT
+        if(limit !== undefined && Number(limit) === NaN) {
+            return Promise.reject({status: 400, msg: 'bad request'})
+        }
+        if(limit) {
+            queryString += ` LIMIT $1`
+            queryValues.push(limit)
+        } else {
+            queryString += ` LIMIT 10`
+        }
+    
+        // GREENLIST PAGE (OFFSET)
+        if(p !== undefined && Number(p) === NaN) {
+            return Promise.reject({status: 400, msg: 'bad request'})
+        }
+        const offsetBy = (p - 1) * 10
+    
+        if(p) {
+            queryString += ` OFFSET $1`
+            queryValues.push(offsetBy)
+        } else {
+            queryString += ` OFFSET 0`
+        }
+    
+    
+        return db.query(queryString, queryValues).then(({rows}) => {
+            return rows
+        })
     })
 }
 
