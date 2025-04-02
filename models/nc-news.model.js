@@ -100,7 +100,7 @@ function fetchArticles(sort_by, order, topic, limit, p) {
         queryString += " GROUP BY articles.article_id"
     
         // GREENLIST SORT_BY
-        const allowedColumns = ["article_id", "title", "topic", "author", "body", "created_at", "votes", "article_img_url"]
+        const allowedColumns = ["article_id", "title", "topic", "author", "body", "created_at", "votes", "article_img_url", "comment_count"]
         if(sort_by !== undefined && !allowedColumns.includes(sort_by)) {
             return Promise.reject({status: 400, msg: "bad request"})
         }
