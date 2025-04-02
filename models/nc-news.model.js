@@ -105,7 +105,9 @@ function fetchArticles(sort_by, order, topic, limit, p) {
             return Promise.reject({status: 400, msg: "bad request"})
         }
     
-        if(sort_by) {
+        if(sort_by === "comment_count") {
+            queryString += `ORDER BY comment_count`
+        } else if(sort_by) {
             queryString += ` ORDER BY articles.${sort_by}`
         } else {
             queryString += " ORDER BY articles.created_at"
