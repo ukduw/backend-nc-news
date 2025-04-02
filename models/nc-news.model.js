@@ -106,7 +106,7 @@ function fetchArticles(sort_by, order, topic, limit, p) {
         }
     
         if(sort_by === "comment_count") {
-            queryString += `ORDER BY comment_count`
+            queryString += ` ORDER BY comment_count`
         }
         if(sort_by && sort_by !== "comment_count") {
             queryString += ` ORDER BY articles.${sort_by}`
